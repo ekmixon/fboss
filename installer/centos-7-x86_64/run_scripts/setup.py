@@ -60,8 +60,9 @@ class SetupFboss:
             )
             PLATFORM = "WEDGE100S+RSW"
             self.src_bcm_conf_full_path = os.path.join(
-                SetupFboss.BCM_CONFIG_DIR, PLATFORM + "-bcm.conf"
+                SetupFboss.BCM_CONFIG_DIR, f"{PLATFORM}-bcm.conf"
             )
+
 
         elif [x for x in output if "Broadcom" in x and "b980" in x]:
             self.src_fruid_full_path = os.path.join(
@@ -72,7 +73,7 @@ class SetupFboss:
             )
             PLATFORM = "MINIPACK+FSW"
             self.src_bcm_conf_full_path = os.path.join(
-                SetupFboss.BCM_CONFIG_DIR, PLATFORM + "-bcm.conf"
+                SetupFboss.BCM_CONFIG_DIR, f"{PLATFORM}-bcm.conf"
             )
 
     def _cleanup_old_setup(self):
@@ -158,7 +159,7 @@ class SetupFboss:
 
 if __name__ == "__main__":
     if "FBOSS" not in os.environ:
-        sys.exit(f"FBOSS is unset. Run 'source ./bin/setup_fboss_env' to set it up.")
+        sys.exit("FBOSS is unset. Run 'source ./bin/setup_fboss_env' to set it up.")
     else:
         print(f"Running setup.py with FBOSS={os.environ['FBOSS']}")
 

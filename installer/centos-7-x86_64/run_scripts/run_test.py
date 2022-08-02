@@ -55,25 +55,22 @@ class TestRunner:
             line = line.split("#")[0].strip()
             if line.endswith("."):
                 class_name = line[:-1]
-            else:
-                if not class_name:
-                    raise "error"
+            elif not class_name:
+                raise "error"
             func_name = line.strip()
-            ret.append("%s.%s" % (class_name, func_name))
+            ret.append(f"{class_name}.{func_name}")
 
         return ret
 
     def _parse_gtest_run_output(self, test_output):
         test_summary = []
         for line in test_output.decode("utf-8").split("\n"):
-            match = self._GTEST_RESULT_PATTERN.match(line.strip())
-            if not match:
-                continue
-            test_summary.append(line)
+            if match := self._GTEST_RESULT_PATTERN.match(line.strip()):
+                test_summary.append(line)
         return test_summary
 
     def _get_bcm_tests_to_run(self, args):
-        filter = ("--gtest_filter=" + args.filter) if (args.filter is not None) else ""
+        filter = f"--gtest_filter={args.filter}" if args.filter is not None else ""
         output = subprocess.check_output(
             ["bcm_test", "--gtest_list_tests", filter], env=self.ENV_VAR
         )
@@ -89,12 +86,13 @@ class TestRunner:
                     "--bcm_config",
                     conf_file,
                     "--flexports",
-                    "--gtest_filter=" + test_to_run,
+                    f"--gtest_filter={test_to_run}",
                     flags,
                 ],
                 timeout=self.TESTRUN_TIMEOUT,
                 env=self.ENV_VAR,
             )
+
             # Add test prefix to test name in the result
             run_test_result = self._add_test_prefix_to_gtest_result(
                 run_test_output, test_prefix
@@ -112,36 +110,30 @@ class TestRunner:
         except subprocess.CalledProcessError:
             # Test aborted, mark it as FAILED
             run_test_result = (
-                "[   FAILED ] " + test_prefix + test_to_run + " (0 ms)"
-            ).encode("utf-8")
+                f"[   FAILED ] {test_prefix}{test_to_run} (0 ms)".encode("utf-8")
+            )
+
         return run_test_result
 
     def _run_bcm_tests(self, tests_to_run, args):
-        # Determine if tests need to be run with warmboot mode too
-        warmboot = False
-        if args.coldboot_only is False:
-            warmboot = True
-
+        warmboot = args.coldboot_only is False
         conf_file = (
             args.conf_file if (args.conf_file is not None) else self.BCM_CONF_PATH
         )
         if not os.path.exists(conf_file):
-            print("########## Conf file not found: " + conf_file)
+            print(f"########## Conf file not found: {conf_file}")
             return []
 
         test_outputs = []
         for test_to_run in tests_to_run:
             # Run the test for coldboot verification
-            print("########## Running test: " + test_to_run, flush=True)
+            print(f"########## Running test: {test_to_run}", flush=True)
             test_output = self._run_bcm_test(conf_file, test_to_run, warmboot, False)
             test_outputs.append(test_output)
 
             # Run the test again for warmboot verificationif the test supports it
             if warmboot and os.path.isfile(WARMBOOT_CHECK_FILE):
-                print(
-                    "########## Verifying test with warmboot: " + test_to_run,
-                    flush=True,
-                )
+                print(f"########## Verifying test with warmboot: {test_to_run}", flush=True)
                 test_output = self._run_bcm_test(conf_file, test_to_run, False, True)
                 test_outputs.append(test_output)
 

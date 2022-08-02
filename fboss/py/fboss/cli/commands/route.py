@@ -35,8 +35,8 @@ def printRouteDetailEntry(entry, vlan_aggregate_port_map, vlan_port_map):
                 print("    %s" % utils.nexthop_to_str(NextHopThrift(address=address)))
         elif clAndNxthops.nextHops:
             for nextHop in clAndNxthops.nextHops:
-                print("    %s" % utils.nexthop_to_str(nextHop))
-    print("  Action: %s" % entry.action)
+                print(f"    {utils.nexthop_to_str(nextHop)}")
+    print(f"  Action: {entry.action}")
     if entry.nextHops and len(entry.nextHops) > 0:
         print("  Forwarding via:")
         for nextHop in entry.nextHops:
@@ -56,8 +56,8 @@ def printRouteDetailEntry(entry, vlan_aggregate_port_map, vlan_port_map):
             )
     else:
         print("    No Forwarding Info")
-    print("  Admin Distance: %s" % entry.adminDistance)
-    print("  Counter Id: %s" % entry.counterID)
+    print(f"  Admin Distance: {entry.adminDistance}")
+    print(f"  Counter Id: {entry.counterID}")
     print()
 
 
@@ -78,10 +78,11 @@ def is_ucmp_active(next_hops: t.Iterator[NextHopThrift]) -> bool:
     """
 
     # Let's avoid crashing the CLI when next_hops is blank ;)
-    if not next_hops:
-        return False
-
-    return not all(next_hops[0].weight == nh.weight for nh in next_hops)
+    return (
+        any(next_hops[0].weight != nh.weight for nh in next_hops)
+        if next_hops
+        else False
+    )
 
 
 def parse_nexthops(nexthops):
@@ -141,9 +142,9 @@ class RouteIpCmd(cmds.FbossCmd):
     ):
         resp = client.getIpRouteDetails(addr, vrf)
         if not resp.nextHopMulti:
-            print("No route to " + addr.addr + ", Vrf: %d" % vrf)
+            print(f"No route to {addr.addr}" + ", Vrf: %d" % vrf)
             return
-        print("Route to " + addr.addr + ", Vrf: %d" % vrf)
+        print(f"Route to {addr.addr}" + ", Vrf: %d" % vrf)
         printRouteDetailEntry(resp, vlan_aggregate_port_map, vlan_port_map)
 
     def run(self, ip, vrf):

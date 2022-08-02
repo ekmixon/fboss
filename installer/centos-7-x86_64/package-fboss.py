@@ -80,12 +80,12 @@ class PackageFboss:
         self.rpm_src_fboss_dir_abs = os.path.join(
             self.rpm_src_dir_abs, PackageFboss.FBOSS_BINS
         )
-        self.rpm_src_fboss_tar_abs = self.rpm_src_fboss_dir_abs + ".tar.gz"
+        self.rpm_src_fboss_tar_abs = f"{self.rpm_src_fboss_dir_abs}.tar.gz"
 
     def _get_install_dir_for(self, name):
         get_install_dir_cmd = [PackageFboss.GETDEPS, "show-inst-dir", name]
         if self.scratch_path is not None:
-            get_install_dir_cmd += ["--scratch-path=" + self.scratch_path]
+            get_install_dir_cmd += [f"--scratch-path={self.scratch_path}"]
         return (
             subprocess.check_output(get_install_dir_cmd)
             .decode("utf-8")
@@ -149,7 +149,7 @@ class PackageFboss:
             shutil.copy(linux_kernel_bde_path, ko_pkg_path)
 
     def _copy_binaries(self, tmp_dir_name):
-        print(f"Copying binaries...")
+        print("Copying binaries...")
 
         for name, exec_type_and_execs in list(PackageFboss.NAME_TO_EXECUTABLES.items()):
             executable_path = self._get_install_dir_for(name)
@@ -165,7 +165,7 @@ class PackageFboss:
                 try:
                     shutil.copy(abs_path, bin_pkg_path)
                 except IOError:
-                    print("Skipping non-existent " + abs_path)
+                    print(f"Skipping non-existent {abs_path}")
 
         self._copy_run_scripts(tmp_dir_name)
         self._copy_run_configs(tmp_dir_name)
@@ -173,7 +173,7 @@ class PackageFboss:
         self._copy_kos(tmp_dir_name)
 
     def _setup_for_rpmbuild(self):
-        print(f"Setup for rpmbuild...")
+        print("Setup for rpmbuild...")
         if os.path.exists(self.rpm_dir_abs):
             shutil.rmtree(self.rpm_dir_abs)
         os.makedirs(self.rpm_dir_abs)
@@ -181,7 +181,7 @@ class PackageFboss:
         os.makedirs(self.rpm_src_fboss_dir_abs)
 
     def _prepare_for_build(self):
-        print(f"Preparing for build...")
+        print("Preparing for build...")
         with tarfile.open(self.rpm_src_fboss_tar_abs, "w:gz") as tar:
             tar.add(
                 self.rpm_src_fboss_dir_abs,
@@ -196,7 +196,7 @@ class PackageFboss:
         shutil.copy(PackageFboss.RPM_SPEC_ABS, self.rpm_spec_dir_abs)
 
     def _build_rpm_helper(self):
-        print(f"Building rpm...")
+        print("Building rpm...")
         env = dict(os.environ)
         env["LD_LIBRARY_PATH"] = PackageFboss.DEVTOOLS_LIBRARY_PATH
         subprocess.run(
@@ -213,7 +213,7 @@ class PackageFboss:
 
     def run(self, args):
         if args.rpm:
-            print(f"Building RPM...")
+            print("Building RPM...")
             self._build_rpm()
         else:
             self._copy_binaries(self.tmp_dir_name)

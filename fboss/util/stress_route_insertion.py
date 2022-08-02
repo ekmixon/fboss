@@ -76,14 +76,14 @@ class StressRouteInsertion(object):
         @NOTE: doesn't work for prefix > 120 bits"""
         prefix = random.randint(self.minprefix, self.maxprefix)  # inclusive
         r = ""
-        for i in range(0, int(prefix / 4)):
+        for i in range(prefix // 4):
             r += "{0:x}".format(random.randint(0, 15))
             if ((i + 1) % 4) == 0:
                 r += ":"
         leftover = prefix - (i * 4)
         # this ensures we don't end with a ':' as well
         r += "{0:x}".format(random.randint(0, 15) & (pow(2, leftover) - 1))
-        return r + "::1/{}".format(prefix)
+        return r + f"::1/{prefix}"
 
     def insert_routes(self, routes):
         uniRoutes = []
@@ -111,10 +111,9 @@ class StressRouteInsertion(object):
     def run_test(self):
         """Run actual test"""
         print(
-            "Generating {} random routes with prefix between {} and {}".format(
-                self.entries, self.minprefix, self.maxprefix
-            )
+            f"Generating {self.entries} random routes with prefix between {self.minprefix} and {self.maxprefix}"
         )
+
         self.routes = self.generate_random_routes()
         print("... done.")
 
@@ -122,21 +121,19 @@ class StressRouteInsertion(object):
         start = time.clock()
         self.insert_routes(self.routes)
         stop = time.clock()
-        print(
-            " ... done : {} seconds - not the real test, but FYI".format(stop - start)
-        )
+        print(f" ... done : {stop - start} seconds - not the real test, but FYI")
 
         target = (1 - (self.percent / 100)) * self.entries
-        for loop in range(0, self.loops):
-            print("--- Starting loop {}...".format(loop))
-            print("Deleting {} routes".format(self.entries - target))
+        for loop in range(self.loops):
+            print(f"--- Starting loop {loop}...")
+            print(f"Deleting {self.entries - target} routes")
             delete_routes = []
             while len(self.routes) > target:
                 route = random.choice(list(self.routes.keys()))
                 delete_routes.append(route)
                 del self.routes[route]
             self.delete_routes(delete_routes)
-            print("Picking {} new routes".format(self.entries - target))
+            print(f"Picking {self.entries - target} new routes")
             new_routes = self.generate_random_routes(n=self.entries - target)
             print("Adding new routes")
             start = time.clock()
@@ -145,10 +142,9 @@ class StressRouteInsertion(object):
             self.insert_routes(new_routes)
             stop = time.clock()
             print(
-                "RESULT: {} seconds to add {} new routes".format(
-                    stop - start, self.entries - target
-                )
+                f"RESULT: {stop - start} seconds to add {self.entries - target} new routes"
             )
+
         if self.pause_on_exit:
             input("\n\n\nTest Done -- press return to cleanup: ")
 
@@ -158,48 +154,44 @@ if __name__ == "__main__":
     parser.add_argument(
         "--port",
         type=int,
-        help="Remote thrift TCP port ({})".format(
-            StressRouteInsertion.defaults["port"]
-        ),
+        help=f'Remote thrift TCP port ({StressRouteInsertion.defaults["port"]})',
         default=StressRouteInsertion.defaults["port"],
     )
+
     parser.add_argument(
         "--host",
-        help="Switch Mgmt intf ({})".format(StressRouteInsertion.defaults["host"]),
+        help=f'Switch Mgmt intf ({StressRouteInsertion.defaults["host"]})',
         default=StressRouteInsertion.defaults["host"],
     )
+
     parser.add_argument(
         "--entries",
         type=int,
-        help="Number of routes to insert ({})".format(
-            StressRouteInsertion.defaults["entries"]
-        ),
+        help=f'Number of routes to insert ({StressRouteInsertion.defaults["entries"]})',
         default=StressRouteInsertion.defaults["entries"],
     )
+
     parser.add_argument(
         "--percent",
         type=int,
-        help="Percent of routes to churn each loop ({})".format(
-            StressRouteInsertion.defaults["percent"]
-        ),
+        help=f'Percent of routes to churn each loop ({StressRouteInsertion.defaults["percent"]})',
         default=StressRouteInsertion.defaults["percent"],
     )
+
     parser.add_argument(
         "--loops",
         type=int,
-        help="Number of times to loop through the algorithm ({})".format(
-            StressRouteInsertion.defaults["loops"]
-        ),
+        help=f'Number of times to loop through the algorithm ({StressRouteInsertion.defaults["loops"]})',
         default=StressRouteInsertion.defaults["loops"],
     )
+
     parser.add_argument(
         "--pause_on_exit",
         action="store_true",
-        help="Wait for key press before cleanup ({})".format(
-            StressRouteInsertion.defaults["pause_on_exit"]
-        ),
+        help=f'Wait for key press before cleanup ({StressRouteInsertion.defaults["pause_on_exit"]})',
         default=StressRouteInsertion.defaults["pause_on_exit"],
     )
+
     args = parser.parse_args()
     try:
         test = StressRouteInsertion(**args.__dict__)

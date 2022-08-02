@@ -36,12 +36,9 @@ def get_expected_oss_files():
 def get_built_oss_files_in_file(cmake_file):
     built_oss_files_for_file = []
     with open(cmake_file) as file:
-        line = file.readline()
-        while line:
+        while line := file.readline():
             if line.strip().endswith(".cpp"):
                 built_oss_files_for_file.append(line.strip())
-            line = file.readline()
-
     return sorted(set(built_oss_files_for_file))
 
 

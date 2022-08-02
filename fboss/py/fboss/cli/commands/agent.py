@@ -46,7 +46,7 @@ class AgentConfigCmd(cmds.FbossCmd):
                 print("Config reloaded")
                 return 0
             except FbossBaseError as e:
-                print("Fboss Error: " + e)
+                print(f"Fboss Error: {e}")
                 return 2
 
     def run(self, cmd_type, json=False):
@@ -55,4 +55,4 @@ class AgentConfigCmd(cmds.FbossCmd):
         elif cmd_type == KEYWORD_CONFIG_RELOAD:
             self._reload_config()
         else:
-            raise Exception("Unknown command `{}`".format(cmd_type))
+            raise Exception(f"Unknown command `{cmd_type}`")

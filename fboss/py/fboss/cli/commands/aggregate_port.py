@@ -18,8 +18,7 @@ AGG_PORT_NUM_RE = re.compile(r".*?(?P<port_num>[0-9]+)$")
 
 def get_port_num(port: str) -> str:
 
-    port_num_match = AGG_PORT_NUM_RE.match(port)
-    if port_num_match:
+    if port_num_match := AGG_PORT_NUM_RE.match(port):
         return port_num_match.group("port_num")
 
     return ""
@@ -28,13 +27,7 @@ def get_port_num(port: str) -> str:
 def _should_print_agg_port_info(target_port_num: str, agg_port) -> bool:
 
     # If there's no target set we print the info for all ports
-    if not target_port_num:
-        return True
-
-    if agg_port.key == int(target_port_num):
-        return True
-
-    return False
+    return agg_port.key == int(target_port_num) if target_port_num else True
 
 
 def _print_agg_port_sum(agg_port) -> None:
@@ -72,17 +65,9 @@ class AggregatePortCmd(cmds.FbossCmd):
         for entry in resp:
             subports = entry.subports
             subports = sorted(subports, key=lambda x: x.id)
-            print(
-                "AggregatePortID: {} Num Ports: {}".format(
-                    entry.aggregatePortId, len(subports)
-                )
-            )
+            print(f"AggregatePortID: {entry.aggregatePortId} Num Ports: {len(subports)}")
             for subport in subports:
-                print(
-                    "\tSubport ID: {} Enabled: {}".format(
-                        subport.id, subport.isForwardingEnabled
-                    )
-                )
+                print(f"\tSubport ID: {subport.id} Enabled: {subport.isForwardingEnabled}")
 
     def run(self, port):
 

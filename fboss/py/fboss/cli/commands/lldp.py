@@ -49,7 +49,7 @@ class LldpCmd(cmds.FbossCmd):
 
         entries = []
         for neighbor in lldp_nbrs:
-            if lldp_port and not neighbor.localPort == lldp_port:
+            if lldp_port and neighbor.localPort != lldp_port:
                 continue
             if not neighbor.systemName:
                 # Skipping neighbors without name populated
@@ -87,38 +87,38 @@ class LldpCmd(cmds.FbossCmd):
     def _print_verbose(self, entries, headers):
         for entry in entries:
             print("Neighbor:")
-            print("  Local Port: {}".format(entry["local_port"]))
-            print("  Local VLAN: {}".format(entry["local_vlan"]))
-            print("  Original TTL: {}".format(entry["ttl"]))
-            print("  TTL Left: {}".format(entry["ttl_left"]))
-            print("  Source MAC: {}".format(entry["mac"]))
-            print("  Chassis ID Type: {}".format(entry["chassis_id_type"]))
+            print(f'  Local Port: {entry["local_port"]}')
+            print(f'  Local VLAN: {entry["local_vlan"]}')
+            print(f'  Original TTL: {entry["ttl"]}')
+            print(f'  TTL Left: {entry["ttl_left"]}')
+            print(f'  Source MAC: {entry["mac"]}')
+            print(f'  Chassis ID Type: {entry["chassis_id_type"]}')
 
             raw_chassis = entry["raw_chassis"]
             if self.is_printable(raw_chassis):
-                print("  Chassis ID: {}".format(raw_chassis))
+                print(f"  Chassis ID: {raw_chassis}")
             else:
                 rc = binascii.hexlify(raw_chassis)
-                print("  Raw Chassis ID: hex({})".format(rc))
-                print("  Chassis ID: {}".format(entry["chassis"]))
+                print(f"  Raw Chassis ID: hex({rc})")
+                print(f'  Chassis ID: {entry["chassis"]}')
 
             raw_port = entry["raw_port"]
             if self.is_printable(raw_port):
-                print("  Port ID: {}".format(raw_port))
+                print(f"  Port ID: {raw_port}")
             else:
                 rc = binascii.hexlify(raw_port)
-                print("  Raw Port ID: hex({})".format(rc))
-                print("  Port ID: {}".format(entry["port"]))
+                print(f"  Raw Port ID: hex({rc})")
+                print(f'  Port ID: {entry["port"]}')
 
-            print("  System Name: {}".format(entry["system"]))
+            print(f'  System Name: {entry["system"]}')
 
             desc = entry["system_desc"]
             if "\n" in desc:
                 desc = "\n    ".join(desc.splitlines())
-                print("  System Description:\n    {}".format(desc))
+                print(f"  System Description:\n    {desc}")
             else:
-                print("  System Description: {}".format(desc))
-            print("  Port Description: {}".format(entry["port_desc"]))
+                print(f"  System Description: {desc}")
+            print(f'  Port Description: {entry["port_desc"]}')
             print()
 
     def is_printable(self, value):
@@ -129,23 +129,22 @@ class LldpCmd(cmds.FbossCmd):
             return False
 
     def _get_fields(self, neighbor):
-        fields = {}
-        fields["local_port"] = neighbor.localPortName
-        fields["local_vlan"] = neighbor.localVlan
-        fields["mac"] = neighbor.srcMac
-        fields["chassis"] = neighbor.printableChassisId
-        fields["raw_chassis"] = neighbor.chassisId
-        fields["chassis_id_type"] = neighbor.chassisIdType
-        fields["system"] = neighbor.systemName
-        fields["port"] = neighbor.printablePortId
-        fields["raw_port"] = neighbor.portId
-        fields["port_id_type"] = neighbor.portIdType
-        if neighbor.systemName is None:
-            fields["name"] = neighbor.printableChassisId
-        else:
-            fields["name"] = neighbor.systemName
-        fields["system_desc"] = neighbor.systemDescription or ""
-        fields["port_desc"] = neighbor.portDescription or ""
-        fields["ttl"] = neighbor.originalTTL
-        fields["ttl_left"] = neighbor.ttlSecondsLeft
-        return fields
+        return {
+            "local_port": neighbor.localPortName,
+            "local_vlan": neighbor.localVlan,
+            "mac": neighbor.srcMac,
+            "chassis": neighbor.printableChassisId,
+            "raw_chassis": neighbor.chassisId,
+            "chassis_id_type": neighbor.chassisIdType,
+            "system": neighbor.systemName,
+            "port": neighbor.printablePortId,
+            "raw_port": neighbor.portId,
+            "port_id_type": neighbor.portIdType,
+            "name": neighbor.printableChassisId
+            if neighbor.systemName is None
+            else neighbor.systemName,
+            "system_desc": neighbor.systemDescription or "",
+            "port_desc": neighbor.portDescription or "",
+            "ttl": neighbor.originalTTL,
+            "ttl_left": neighbor.ttlSecondsLeft,
+        }

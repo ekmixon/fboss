@@ -39,7 +39,7 @@ class InterfaceShowCmd(cmds.FbossCmd):
                     for interface in interfaces:
                         self._interface_details(client, interface)
             except FbossBaseError as e:
-                raise SystemExit("Fboss Error: {}".format(e))
+                raise SystemExit(f"Fboss Error: {e}")
 
     def _all_interface_info(self, client):
         resp = client.getInterfaceList()
@@ -55,13 +55,13 @@ class InterfaceShowCmd(cmds.FbossCmd):
             print("No interface details found for interface")
             return
 
-        print("{}\tInterface ID: {}".format(resp.interfaceName, resp.interfaceId))
-        print("  Vlan: {}\t\t\tRouter Id: {}".format(resp.vlanId, resp.routerId))
-        print("  MTU: {}".format(resp.mtu))
-        print("  Mac Address: {}".format(resp.mac))
+        print(f"{resp.interfaceName}\tInterface ID: {resp.interfaceId}")
+        print(f"  Vlan: {resp.vlanId}\t\t\tRouter Id: {resp.routerId}")
+        print(f"  MTU: {resp.mtu}")
+        print(f"  Mac Address: {resp.mac}")
         print("  IP Address:")
         for addr in resp.address:
-            print("\t{}/{}".format(utils.ip_ntop(addr.ip.addr), addr.prefixLength))
+            print(f"\t{utils.ip_ntop(addr.ip.addr)}/{addr.prefixLength}")
 
 
 def convert_address(addr: bytes) -> str:
@@ -76,10 +76,7 @@ def convert_address(addr: bytes) -> str:
 def sort_key(port: str) -> Any:
     """function to return X+Y when given ethX/Y"""
     port_re = re.compile(r"eth(\d+)/(\d+)")
-    match = port_re.match(port)
-    if match:
-        return int(match.group(1) + match.group(2))
-    return port
+    return int(match[1] + match[2]) if (match := port_re.match(port)) else port
 
 
 def get_interface_summary(agent_client, qsfp_client) -> List[Interface]:
@@ -92,10 +89,11 @@ def get_interface_summary(agent_client, qsfp_client) -> List[Interface]:
         # build the addresses variable for this interface
         addresses = "\n".join(
             [
-                convert_address(address.ip.addr) + "/" + str(address.prefixLength)
+                f"{convert_address(address.ip.addr)}/{str(address.prefixLength)}"
                 for address in interface.address
             ]
         )
+
         # build the ports variable for this interface
         ports: str = ""
         if interface.vlanId in vlan_port_map.keys():

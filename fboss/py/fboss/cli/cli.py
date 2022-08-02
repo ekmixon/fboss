@@ -72,9 +72,9 @@ class ArpCli(object):
 
     @click.command()
     @click.pass_obj
-    def _table(cli_opts):
+    def _table(self):
         """Show the ARP table"""
-        arp.ArpTableCmd(cli_opts).run()
+        arp.ArpTableCmd(self).run()
 
     @click.command()
     @click.option(
@@ -86,11 +86,11 @@ class ArpCli(object):
     )
     @click.argument("ip")
     @click.pass_obj
-    def _flush(cli_opts, ip, vlan):
+    def _flush(self, ip, vlan):
         """Flush an ARP entry by [IP] or [subnet] or flush [all]"""
         if ip == "all":
             ip = "0.0.0.0/0"
-        cmds.NeighborFlushSubnetCmd(cli_opts).run(
+        cmds.NeighborFlushSubnetCmd(self).run(
             FlushType.arp, ipaddress.IPv4Network(ip), vlan
         )
 
@@ -101,11 +101,11 @@ class AggregatePortCli(object):
     @click.command()
     @click.argument("port", required=False, default="")
     @click.pass_obj
-    def aggregate_port(cli_opts, port):
+    def aggregate_port(self, port):
         """Show aggregate port information; Outputs a list of
         aggregate port and the subports that are part of the
         aggregate port."""
-        aggregate_port.AggregatePortCmd(cli_opts).run(port)
+        aggregate_port.AggregatePortCmd(self).run(port)
 
 
 class NicCli(object):
@@ -123,9 +123,9 @@ class NicCli(object):
     @click.option("--detail", is_flag=True, help="Display detailed port status")
     @click.option("--verbose", is_flag=True, help="Display detailed port status")
     @click.pass_obj
-    def _vendor(cli_opts, detail, verbose):
+    def _vendor(self, detail, verbose):
         """Show NIC vendor information on hosts"""
-        nic.NicCmd(cli_opts).run(detail, verbose)
+        nic.NicCmd(self).run(detail, verbose)
 
 
 class IpCli(object):
@@ -140,9 +140,9 @@ class IpCli(object):
         help="Show Ip address of the interface",
     )
     @click.pass_obj
-    def ip(cli_opts, interface):
+    def ip(self, interface):
         """Show IP information for an interface"""
-        ip.IpCmd(cli_opts).run(interface)
+        ip.IpCmd(self).run(interface)
 
 
 class InterfaceCli(object):
@@ -160,16 +160,16 @@ class InterfaceCli(object):
     @click.command()
     @click.argument("interfaces", type=int, nargs=-1)
     @click.pass_obj
-    def _show(cli_opts, interfaces):
+    def _show(self, interfaces):
         """Show interface information for Interface(s); Outputs a list of
         interfaces on host if no interfaces are specified"""
-        interface.InterfaceShowCmd(cli_opts).run(interfaces)
+        interface.InterfaceShowCmd(self).run(interfaces)
 
     @click.command()
     @click.pass_obj
-    def _summary(cli_opts):
+    def _summary(self):
         """Show interface summary"""
-        interface.InterfaceSummaryCmd(cli_opts).run()
+        interface.InterfaceSummaryCmd(self).run()
 
 
 class L2Cli(object):
@@ -185,9 +185,9 @@ class L2Cli(object):
 
     @click.command()
     @click.pass_obj
-    def _table(cli_opts):
+    def _table(self):
         """Show the L2 table"""
-        l2.L2TableCmd(cli_opts).run()
+        l2.L2TableCmd(self).run()
 
 
 class LldpCli(object):
@@ -208,9 +208,9 @@ class LldpCli(object):
         help="Level of verbosity indicated by count, i.e -vvv",
     )
     @click.pass_obj
-    def lldp(cli_opts, port, verbose):
+    def lldp(self, port, verbose):
         """Show LLDP neighbors"""
-        lldp.LldpCmd(cli_opts).run(port, verbose)
+        lldp.LldpCmd(self).run(port, verbose)
 
 
 class NdpCli(object):
@@ -227,9 +227,9 @@ class NdpCli(object):
 
     @click.command()
     @click.pass_obj
-    def _table(cli_opts):
+    def _table(self):
         """Show the NDP table"""
-        ndp.NdpTableCmd(cli_opts).run()
+        ndp.NdpTableCmd(self).run()
 
     @click.command()
     @click.option(
@@ -241,11 +241,11 @@ class NdpCli(object):
     )
     @click.argument("ip")
     @click.pass_obj
-    def _flush(cli_opts, ip, vlan):
+    def _flush(self, ip, vlan):
         """Flush an NDP entry by [IP] or [subnet] or flush [all]"""
         if ip == "all":
             ip = "::/0"
-        cmds.NeighborFlushSubnetCmd(cli_opts).run(
+        cmds.NeighborFlushSubnetCmd(self).run(
             FlushType.ndp, ipaddress.IPv6Network(ip), vlan
         )
 
@@ -267,7 +267,7 @@ class PortType(click.ParamType):
             raise ValueError("No port found with that name")
 
         except (ValueError, KeyError):
-            self.fail("%s is not a valid Port" % value, param, ctx)
+            self.fail(f"{value} is not a valid Port", param, ctx)
 
 
 class Stats(object):
@@ -288,16 +288,16 @@ class Stats(object):
         "--detail", is_flag=True, help="Display detailed port stats with lldp"
     )
     @click.pass_obj
-    def _show(cli_opts, detail, ports):
+    def _show(self, detail, ports):
         """Show port statistics"""
-        port.PortStatsCmd(cli_opts).run(detail, ports)
+        port.PortStatsCmd(self).run(detail, ports)
 
     @click.command()
     @click.argument("ports", nargs=-1, type=PortType())
     @click.pass_obj
-    def _clear(cli_opts, ports):
+    def _clear(self, ports):
         """Clear stats"""
-        port.PortStatsClearCmd(cli_opts).run(ports)
+        port.PortStatsClearCmd(self).run(ports)
 
 
 class PortState(object):
@@ -319,33 +319,33 @@ class PortState(object):
     @click.argument("ports", nargs=-1, type=PortType())
     @click.option("--all", is_flag=True, help="Display Disabled ports")
     @click.pass_obj
-    def _show(cli_opts, ports, all):  # noqa: B902
+    def _show(self, ports, all):    # noqa: B902
         """Show port state for given [port(s)]"""
-        port.PortStatusCmd(cli_opts).run(
+        port.PortStatusCmd(self).run(
             detail=False, ports=ports, verbose=False, internal=True, all=all
         )
 
     @click.command()
     @click.argument("ports", nargs=-1, type=PortType())
     @click.pass_obj
-    def _enable(cli_opts, ports):  # noqa: B902
+    def _enable(self, ports):    # noqa: B902
         """Enable port state for given [port(s)]"""
-        port.PortSetStatusCmd(cli_opts).run(ports, True)
+        port.PortSetStatusCmd(self).run(ports, True)
 
     @click.command()
     @click.argument("ports", nargs=-1, type=PortType())
     @click.pass_obj
-    def _disable(cli_opts, ports):  # noqa: B902
+    def _disable(self, ports):    # noqa: B902
         """Disable port state for given [port(s)]"""
-        port.PortSetStatusCmd(cli_opts).run(ports, False)
+        port.PortSetStatusCmd(self).run(ports, False)
 
     @click.command()
     @click.argument("ports", nargs=-1, type=PortType())
     @click.option("--all", is_flag=True, help="Flap all Present but Down ports")
     @click.pass_obj
-    def _flap(cli_opts, ports, all):  # noqa: B902
+    def _flap(self, ports, all):    # noqa: B902
         """Flap port state for given [port(s)]"""
-        port.PortFlapCmd(cli_opts).run(ports, all)
+        port.PortFlapCmd(self).run(ports, all)
 
     @click.command()
     @click.argument("ports", nargs=-1, type=PortType())
@@ -353,7 +353,7 @@ class PortState(object):
     @click.option("--on", is_flag=True, help="LED will be permanently ON")
     @click.option("--off", is_flag=True, help="LED will be permanently OFF")
     @click.pass_obj
-    def _set_led(cli_opts, ports, internal, on, off):  # noqa: B902
+    def _set_led(self, ports, internal, on, off):    # noqa: B902
         """Set LED light state for given [port(s)]"""
         value = PortLedExternalState.NONE
         if on:
@@ -361,7 +361,7 @@ class PortState(object):
         if off:
             value = PortLedExternalState.EXTERNAL_FORCE_OFF
 
-        port.PortSetLedCmd(cli_opts).run(ports, value)
+        port.PortSetLedCmd(self).run(ports, value)
 
 
 class PrbsContext(CliOptions):  # noqa: B903
@@ -409,24 +409,21 @@ class PortPrbsCli(object):
 
     @click.group(cls=AliasedGroup)  # noqa: B902
     @click.pass_context
-    def system(ctx):  # noqa: B902
+    def system(self):    # noqa: B902
         """Port prbs gearbox system commands"""
-        ctx.obj = PrbsContext(ctx.obj, PrbsComponent.GB_SYSTEM)
-        pass
+        self.obj = PrbsContext(self.obj, PrbsComponent.GB_SYSTEM)
 
     @click.group(cls=AliasedGroup)  # noqa: B902
     @click.pass_context
-    def line(ctx):  # noqa: B902
+    def line(self):    # noqa: B902
         """Port prbs gearbox system commands"""
-        ctx.obj = PrbsContext(ctx.obj, PrbsComponent.GB_LINE)
-        pass
+        self.obj = PrbsContext(self.obj, PrbsComponent.GB_LINE)
 
     @click.group(cls=AliasedGroup)  # noqa: B902
     @click.pass_context
-    def asic(ctx):  # noqa: B902
+    def asic(self):    # noqa: B902
         """Port prbs asic commands"""
-        ctx.obj = PrbsContext(ctx.obj, PrbsComponent.ASIC)
-        pass
+        self.obj = PrbsContext(self.obj, PrbsComponent.ASIC)
 
     @click.command()
     @click.argument("ports", nargs=-1, type=PortType())
@@ -437,31 +434,31 @@ class PortPrbsCli(object):
         help="The polynomial to be used for PRBS (default: 31)",
     )
     @click.pass_obj
-    def _enable(obj, ports, p):  # noqa: B902
+    def _enable(self, ports, p):    # noqa: B902
         """Enable prbs for given [port(s)]"""
-        port.PortPrbsCmd(obj, obj.component, ports).set_prbs(True, p)
+        port.PortPrbsCmd(self, self.component, ports).set_prbs(True, p)
 
     @click.command()
     @click.argument("ports", nargs=-1, type=PortType())
     @click.pass_obj
-    def _disable(obj, ports):  # noqa: B902
+    def _disable(self, ports):    # noqa: B902
         """Disable prbs for given [port(s)]"""
-        port.PortPrbsCmd(obj, obj.component, ports).set_prbs(False)
+        port.PortPrbsCmd(self, self.component, ports).set_prbs(False)
 
     @click.command()
     @click.argument("ports", nargs=-1, type=PortType())
     @click.pass_obj
-    def _stats(obj, ports):  # noqa: B902
+    def _stats(self, ports):    # noqa: B902
         """Get stats of prbs for given [port(s)]"""
 
-        port.PortPrbsCmd(obj, obj.component, ports).get_prbs_stats()
+        port.PortPrbsCmd(self, self.component, ports).get_prbs_stats()
 
     @click.command()
     @click.argument("ports", nargs=-1, type=PortType())
     @click.pass_obj
-    def _clear(obj, ports):  # noqa: B902
+    def _clear(self, ports):    # noqa: B902
         """Clear stats of prbs for given [port(s)]"""
-        port.PortPrbsCmd(obj, obj.component, ports).clear_prbs_stats()
+        port.PortPrbsCmd(self, self.component, ports).clear_prbs_stats()
 
 
 class PortTransceiver(object):
@@ -478,9 +475,9 @@ class PortTransceiver(object):
     @click.command()
     @click.argument("ports", nargs=-1, type=PortType())
     @click.pass_obj
-    def _transceiver(cli_opts, ports):  # noqa: B902
+    def _transceiver(self, ports):    # noqa: B902
         """Show port transceiver for given [port(s)]"""
-        port.PortStatusCmd(cli_opts).run(
+        port.PortStatusCmd(self).run(
             detail=False, ports=ports, verbose=True, internal=False, all=all
         )
 
@@ -505,16 +502,16 @@ class PortCli(object):
     @click.command()
     @click.argument("ports", nargs=-1, type=PortType())
     @click.pass_obj
-    def _details(cli_opts, ports):
+    def _details(self, ports):
         """Show port details for given [port(s)]"""
-        port.PortDetailsCmd(cli_opts).run(ports)
+        port.PortDetailsCmd(self).run(ports)
 
     @click.command()
     @click.argument("ports", nargs=-1, type=PortType())
     @click.pass_obj
-    def _description(cli_opts, ports):
+    def _description(self, ports):
         """Show port description for given [port(s)]"""
-        port.PortDescriptionCmd(cli_opts).run(ports)
+        port.PortDescriptionCmd(self).run(ports)
 
 
 class ProductInfoCli(object):
@@ -525,9 +522,9 @@ class ProductInfoCli(object):
         "-d", "--detail", is_flag=True, help="Display detailed product information"
     )
     @click.pass_obj
-    def product(cli_opts, detail):
+    def product(self, detail):
         """Show product information"""
-        info.ProductInfoCmd(cli_opts).run(detail)
+        info.ProductInfoCmd(self).run(detail)
 
 
 class RouteCli(object):
@@ -557,9 +554,9 @@ class RouteCli(object):
         help="Show Route to the IP address in the vrf",
     )
     @click.pass_obj
-    def _ip(cli_opts, ip, vrf):
+    def _ip(self, ip, vrf):
         """Show the route to a specific IP"""
-        route.RouteIpCmd(cli_opts).run(ip, vrf)
+        route.RouteIpCmd(self).run(ip, vrf)
 
     @click.command()
     @click.option(
@@ -572,18 +569,18 @@ class RouteCli(object):
     @click.option("-6", "--ipv6", is_flag=True, default=False, help="Show IPv6 routes")
     @click.argument("prefix", nargs=-1, type=str)
     @click.pass_obj
-    def _table(cli_opts, client_id, ipv4, ipv6, prefix):  # noqa: B902
+    def _table(self, client_id, ipv4, ipv6, prefix):    # noqa: B902
         """Show the route table"""
-        route.RouteTableCmd(cli_opts).run(client_id, ipv4, ipv6, prefix)
+        route.RouteTableCmd(self).run(client_id, ipv4, ipv6, prefix)
 
     @click.command()
     @click.option("-4", "--ipv4", is_flag=True, default=False, help="Show IPv4 routes")
     @click.option("-6", "--ipv6", is_flag=True, default=False, help="Show IPv6 routes")
     @click.argument("prefix", nargs=-1, type=str)
     @click.pass_obj
-    def _details(cli_opts, ipv4, ipv6, prefix):  # noqa: B902
+    def _details(self, ipv4, ipv6, prefix):    # noqa: B902
         """Show details of the route table"""
-        route.RouteTableDetailsCmd(cli_opts).run(ipv4, ipv6, prefix)
+        route.RouteTableDetailsCmd(self).run(ipv4, ipv6, prefix)
 
     @click.command()
     @click.argument("prefix", nargs=1, required=True)
@@ -605,14 +602,14 @@ class RouteCli(object):
         "MAX_ADMIN_DISTANCE=255",
     )
     @click.pass_obj
-    def _add(cli_opts, client_id, admin_distance, prefix, nexthop):
+    def _add(self, client_id, admin_distance, prefix, nexthop):
         """
         Add a new route or change an existing route
 
         PREFIX - The route prefix, i.e. "1.1.1.0/24" or "2001::0/64\n
         NEXTHOP - The nexthops of the route, i.e "10.1.1.1" or "2002::1"
         """
-        route.RouteAddCmd(cli_opts).run(client_id, admin_distance, prefix, nexthop)
+        route.RouteAddCmd(self).run(client_id, admin_distance, prefix, nexthop)
 
     @click.command()
     @click.option(
@@ -624,13 +621,13 @@ class RouteCli(object):
     )
     @click.argument("prefix")
     @click.pass_obj
-    def _delete(cli_opt, client_id, prefix):
+    def _delete(self, client_id, prefix):
         """
         Delete an existing route
 
         PREFIX - The route prefix, i.e. "1.1.1.0/24" or "2001::0/64"
         """
-        route.RouteDelCmd(cli_opt).run(client_id, prefix)
+        route.RouteDelCmd(self).run(client_id, prefix)
 
     @click.command()
     @click.option(
@@ -641,15 +638,15 @@ class RouteCli(object):
         help="The client ID used to manipulate the routes",
     )
     @click.pass_obj
-    def _flush(cli_opt, client_id):
+    def _flush(self, client_id):
         """Flush all existing non-interface routes"""
-        route.RouteFlushCmd(cli_opt).run(client_id)
+        route.RouteFlushCmd(self).run(client_id)
 
     @click.command()
     @click.pass_obj
-    def _summary(cli_opt):
+    def _summary(self):
         """Print a summary of routing tables"""
-        route.RouteTableSummaryCmd(cli_opt).run()
+        route.RouteTableSummaryCmd(self).run()
 
 
 class VerbosityCli(object):
@@ -658,8 +655,8 @@ class VerbosityCli(object):
     @click.command(name="verbosity")
     @click.argument("verbosity")
     @click.pass_obj
-    def set(cli_opt, verbosity):
-        cmds.VerbosityCmd(cli_opt).run(verbosity)
+    def set(self, verbosity):
+        cmds.VerbosityCmd(self).run(verbosity)
 
 
 class AgentConfig(object):
@@ -679,15 +676,15 @@ class AgentConfig(object):
         "--json", is_flag=True, default=False, help="Show configuration in JSON format"
     )
     @click.pass_obj
-    def _show(cli_opts, json):  # noqa: B902
+    def _show(self, json):    # noqa: B902
         """Show running config"""
-        agent.AgentConfigCmd(cli_opts).run(KEYWORD_CONFIG_SHOW, json)
+        agent.AgentConfigCmd(self).run(KEYWORD_CONFIG_SHOW, json)
 
     @click.command()
     @click.pass_obj
-    def _reload(cli_opts):  # noqa: B902
+    def _reload(self):    # noqa: B902
         """Reload agent configuration file"""
-        agent.AgentConfigCmd(cli_opts).run(KEYWORD_CONFIG_RELOAD)
+        agent.AgentConfigCmd(self).run(KEYWORD_CONFIG_RELOAD)
 
 
 class AgentCli(object):
@@ -715,9 +712,9 @@ class AclCli(object):
 
     @click.command()
     @click.pass_obj
-    def _table(cli_opts):
+    def _table(self):
         """Show the Acl table"""
-        acl.AclTableCmd(cli_opts).run()
+        acl.AclTableCmd(self).run()
 
 
 class ListHwObjectsCli(object):
@@ -748,13 +745,13 @@ class ListHwObjectsCli(object):
         help="Use objects cached in memory rather than retrieving from HW",
     )
     @click.pass_obj
-    def _list(cli_opts, hw_object, cached):
+    def _list(self, hw_object, cached):
         """List Hw objects"""
         hw_obj_types = [
             HwObjectType()._NAMES_TO_VALUES[_hw_obj_type] for _hw_obj_type in hw_object
         ]
-        cli_opts.options["hw_obj_types"] = hw_obj_types
-        list_hw_objects.ListHwObjectsCmd(cli_opts).run(hw_obj_types, cached)
+        self.options["hw_obj_types"] = hw_obj_types
+        list_hw_objects.ListHwObjectsCmd(self).run(hw_obj_types, cached)
 
 
 # -- Main Command Group -- #
@@ -806,7 +803,7 @@ if __name__ == "__main__":
     try:
         main()
     except FbossBaseError as e:
-        raise SystemExit("Fboss Error: {}".format(e))
+        raise SystemExit(f"Fboss Error: {e}")
     except TApplicationException:
         raise SystemExit("Command not available on host")
     except TTransportException:

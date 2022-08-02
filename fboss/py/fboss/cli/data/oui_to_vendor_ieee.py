@@ -30,9 +30,7 @@ def oui(mac):
     m = re.match(
         "(?P<oui>[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2})(?::[0-9A-F]{2}){3}", mac.upper()
     )
-    if not m:
-        return None
-    return m.group("oui")
+    return m["oui"] if m else None
 
 
 def vendors_for_macs(macs, ignore_unknown=False):

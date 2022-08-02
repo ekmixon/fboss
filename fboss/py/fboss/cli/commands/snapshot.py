@@ -82,10 +82,7 @@ class AgentSnapshotClient:
         if ports is None:
             return self.port_status
         else:
-            build = {}
-            for p in ports:
-                build[p] = self.port_status[p]
-            return build
+            return {p: self.port_status[p] for p in ports}
 
     def getSelectedCounters(self, counters):
         raise Exception("This command is not supported in snapshot")

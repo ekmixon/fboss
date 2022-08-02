@@ -70,7 +70,7 @@ def format_ip(ip):
 
 def format_route(route):
     next_hops = ", ".join(format_ip(ip) for ip in route.nextHopAddrs)
-    return "%s --> %s" % (format_prefix(route.dest), next_hops)
+    return f"{format_prefix(route.dest)} --> {next_hops}"
 
 
 def format_prefix(prefix):
@@ -78,17 +78,17 @@ def format_prefix(prefix):
 
 
 def format_interface(intf):
-    return "%s (%s)" % (", ".join(format_prefix(i) for i in intf.address), intf.mac)
+    return f'{", ".join((format_prefix(i) for i in intf.address))} ({intf.mac})'
 
 
 def format_arp(arp):
-    return "%s -> %s" % (format_ip(arp.ip), arp.mac)
+    return f"{format_ip(arp.ip)} -> {arp.mac}"
 
 
 def list_routes(args):
     with get_client(args) as client:
         for route in client.getRouteTable():
-            print("Route %s" % format_route(route))
+            print(f"Route {format_route(route)}")
 
 
 def list_optics(args):
@@ -106,7 +106,7 @@ def list_ports(args):
         ).items():  # noqa: B301 T25377293 Grandfathered in
             stats = ""
             if details:
-                stats = " (%s)" % client.getPortStats(idx)
+                stats = f" ({client.getPortStats(idx)})"
             print(
                 "Port %d: [enabled=%s, up=%s, present=%s]%s"
                 % (idx, intf.enabled, intf.up, intf.present, stats)
@@ -116,21 +116,19 @@ def list_ports(args):
 def list_arps(args):
     with get_client(args) as client:
         for arp in client.getArpTable():
-            print("Arp: %s" % (format_arp(arp)))
+            print(f"Arp: {format_arp(arp)}")
 
 
 def list_ndps(args):
     with get_client(args) as client:
         for ndp in client.getNdpTable():
-            print("NDP: %s" % (format_arp(ndp)))
+            print(f"NDP: {format_arp(ndp)}")
 
 
 def list_vlans(args):
     with get_client(args) as client:
         # for intf in client.getInterfaceList():
-        vlans = {}
-        for _idx, intf in client.getAllInterfaces().items():
-            vlans[intf.vlanId] = True
+        vlans = {intf.vlanId: True for _idx, intf in client.getAllInterfaces().items()}
         for vlan in vlans:
             print("===== Vlan %d ==== " % vlan)
             for address in client.getVlanAddresses(vlan):
@@ -160,8 +158,7 @@ def get_client(args, timeout=5.0):
     protocol = TBinaryProtocol.TBinaryProtocol(sock)
     transport = protocol.trans
     transport.open()
-    client = FbossCtrl.Client(protocol)
-    yield client
+    yield FbossCtrl.Client(protocol)
     transport.close()
 
 
@@ -172,8 +169,7 @@ def get_qsfp_client(args, timeout=5.0):
     protocol = TBinaryProtocol.TBinaryProtocol(sock)
     transport = protocol.trans
     transport.open()
-    client = QsfpService.Client(protocol)
-    yield client
+    yield QsfpService.Client(protocol)
     transport.close()
 
 

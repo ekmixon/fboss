@@ -31,9 +31,9 @@ class PortDetailsCmd(cmds.FbossCmd):
                 resp = client.getAllPortInfo()
 
             except FbossBaseError as e:
-                raise SystemExit("Fboss Error: " + str(e))
+                raise SystemExit(f"Fboss Error: {str(e)}")
             except Exception as e:
-                raise Exception("Error: " + str(e))
+                raise Exception(f"Error: {str(e)}")
 
             def use_port(port):
                 return (show_down or port.operState == 1) and (
@@ -64,7 +64,7 @@ class PortDetailsCmd(cmds.FbossCmd):
         for factor, unit in [(0, ""), (3, "K"), (6, "M"), (9, "G")]:
             if value < 1000:
                 bps_per_unit = bps / 10 ** factor
-                suffix = "{}bps".format(unit)
+                suffix = f"{unit}bps"
                 break
             value /= 1000
 
@@ -89,12 +89,10 @@ class PortDetailsCmd(cmds.FbossCmd):
 
         fec_status = port_info.fecMode
 
-        pause = ""
-        if port_info.txPause:
-            pause = "TX "
+        pause = "TX " if port_info.txPause else ""
         if port_info.rxPause:
-            pause = pause + "RX"
-        if pause == "":
+            pause += "RX"
+        if not pause:
             pause = "None"
         fmt = "{:.<50}{}"
         lines = [
@@ -110,13 +108,11 @@ class PortDetailsCmd(cmds.FbossCmd):
         ]
 
         if hasattr(port_info, "pfc") and port_info.pfc:
-            pfc_str = ""
-            if port_info.pfc.tx:
-                pfc_str = "TX "
+            pfc_str = "TX " if port_info.pfc.tx else ""
             if port_info.pfc.rx:
-                pfc_str = pfc_str + "RX"
+                pfc_str += "RX"
             if port_info.pfc.watchdog:
-                pfc_str = pfc_str + " WD"
+                pfc_str += " WD"
             lines.append(("PFC", pfc_str))
 
         if hasattr(port_info, "profileID") and port_info.profileID:
@@ -128,32 +124,27 @@ class PortDetailsCmd(cmds.FbossCmd):
         if hasattr(port_info, "portQueues"):
             print(fmt.format("Unicast queues", len(port_info.portQueues)))
             for queue in port_info.portQueues:
-                name = "({})".format(queue.name) if queue.name != "" else ""
+                name = f"({queue.name})" if queue.name != "" else ""
                 attrs = [queue.mode]
-                for val in (
-                    "weight",
-                    "reservedBytes",
-                    "scalingFactor",
-                    "bandwidthBurstMinKbits",
-                    "bandwidthBurstMaxKbits",
-                ):
+                for val in ("weight", "reservedBytes", "scalingFactor", "bandwidthBurstMinKbits", "bandwidthBurstMaxKbits"):
                     if hasattr(queue, val) and getattr(queue, val):
-                        attrs.append("{}={}".format(val, getattr(queue, val)))
+                        attrs.append(f"{val}={getattr(queue, val)}")
 
                 if hasattr(queue, "portQueueRate") and queue.portQueueRate:
-                    if queue.portQueueRate.field == 1:  # pps
-                        attrs.append(
-                            "minpps={}".format(queue.portQueueRate.value.minimum)
+                    if queue.portQueueRate.field == 1:
+                        attrs.extend(
+                            (
+                                f"minpps={queue.portQueueRate.value.minimum}",
+                                f"maxpps={queue.portQueueRate.value.maximum}",
+                            )
                         )
-                        attrs.append(
-                            "maxpps={}".format(queue.portQueueRate.value.maximum)
-                        )
-                    elif queue.portQueueRate.field == 2:  # kbps
-                        attrs.append(
-                            "minkbps={}".format(queue.portQueueRate.value.minimum)
-                        )
-                        attrs.append(
-                            "maxkbps={}".format(queue.portQueueRate.value.maximum)
+
+                    elif queue.portQueueRate.field == 2:
+                        attrs.extend(
+                            (
+                                f"minkbps={queue.portQueueRate.value.minimum}",
+                                f"maxkbps={queue.portQueueRate.value.maximum}",
+                            )
                         )
 
                 if not (hasattr(queue, "aqms") and queue.aqms):
@@ -172,13 +163,13 @@ class PortDetailsCmd(cmds.FbossCmd):
                         elif aqm.behavior == QueueCongestionBehavior.ECN:
                             attrs.append("ECN")
                         if hasattr(aqm.detection, "linear") and aqm.detection.linear:
-                            attrs.append("{}={}".format("detection", "linear"))
+                            attrs.append('detection=linear')
                             linear = aqm.detection.linear
-                            attrs.append(
-                                "{}={}".format("minThresh", linear.minimumLength)
-                            )
-                            attrs.append(
-                                "{}={}".format("maxThresh", linear.maximumLength)
+                            attrs.extend(
+                                (
+                                    f"minThresh={linear.minimumLength}",
+                                    f"maxThresh={linear.maximumLength}",
+                                )
                             )
 
                             print("{:<41}{}".format("", ",".join(attrs)))
@@ -190,10 +181,11 @@ class PortDetailsCmd(cmds.FbossCmd):
                     ):
                         dscpRange = list(dscpRange)
                         dscpRanges.append(
-                            "[{}]".format(dscpRange[0][1])
+                            f"[{dscpRange[0][1]}]"
                             if len(dscpRange) == 1
-                            else "[{}-{}]".format(dscpRange[0][1], dscpRange[-1][1])
+                            else f"[{dscpRange[0][1]}-{dscpRange[-1][1]}]"
                         )
+
                     print("{:<41}DSCP={}".format("", ",".join(dscpRanges)))
 
     def _print_port_counters(self, client, port_info):
@@ -216,7 +208,7 @@ class PortFlapCmd(cmds.FbossCmd):
             else:
                 self.flap_ports(ports)
         except FbossBaseError as e:
-            raise SystemExit("Fboss Error: " + e)
+            raise SystemExit(f"Fboss Error: {e}")
 
         if hasattr(self, "_qsfp_client") and self._qsfp_client:
             self._qsfp_client.__exit__(exec, None, None)
@@ -270,21 +262,21 @@ class PortPrbsCmd(cmds.FbossCmd):
     def clear_prbs_stats(self):
         with self._create_agent_client() as client:
             for port in self.ports:
-                print("Clearing PRBS stats for port %s" % port)
+                print(f"Clearing PRBS stats for port {port}")
                 client.clearPortPrbsStats(port, self.component)
 
     def get_prbs_stats(self):
         with self._create_agent_client() as client:
             for port in self.ports:
                 resp = client.getPortPrbsStats(port, self.component)
-                print("Getting PRBS stats for port %s" % port)
+                print(f"Getting PRBS stats for port {port}")
                 self._print_prbs_stats(resp)
 
     def set_prbs(self, enable, polynominal=31):
         with self._create_agent_client() as client:
             enable_str = "Enabling" if enable else "Disabling"
             for port in self.ports:
-                print("{} PRBS on port {}".format(enable_str, port))
+                print(f"{enable_str} PRBS on port {port}")
                 client.setPortPrbs(port, self.component, enable, polynominal)
 
     def _print_prbs_stats(self, port_stats):
@@ -304,9 +296,9 @@ class PortPrbsCmd(cmds.FbossCmd):
             print(
                 field_fmt.format(
                     lane_stats.laneId,
-                    "out-of-lock"
-                    if not lane_stats.locked
-                    else "{:.2e}".format(lane_stats.ber),
+                    "{:.2e}".format(lane_stats.ber)
+                    if lane_stats.locked
+                    else "out-of-lock",
                     "N/A"
                     if lane_stats.maxBer < 0
                     else "{:.2e}".format(lane_stats.maxBer),
@@ -322,13 +314,13 @@ class PortSetStatusCmd(cmds.FbossCmd):
         try:
             self.set_status(ports, status)
         except FbossBaseError as e:
-            raise SystemExit("Fboss Error: " + e)
+            raise SystemExit(f"Fboss Error: {e}")
 
     def set_status(self, ports, status):
         with self._create_agent_client() as client:
             for port in ports:
                 status_str = "Enabling" if status else "Disabling"
-                print("{} port {}".format(status_str, port))
+                print(f"{status_str} port {port}")
                 client.setPortState(port, status)
 
 
@@ -337,13 +329,13 @@ class PortSetLedCmd(cmds.FbossCmd):
         try:
             self.set_led(ports, value)
         except FbossBaseError as e:
-            raise SystemExit("Fboss Error: " + e)
+            raise SystemExit(f"Fboss Error: {e}")
 
     def set_led(self, ports, value):
         with self._create_agent_client() as client:
             for port in ports:
                 values = PortLedExternalState._VALUES_TO_NAMES
-                print("Setting port {} to value: {}".format(port, values.get(value)))
+                print(f"Setting port {port} to value: {values.get(value)}")
                 client.setExternalLedState(port, value)
 
 
@@ -352,16 +344,16 @@ class PortStatsCmd(cmds.FbossCmd):
         try:
             self.show_stats(details, ports)
         except FbossBaseError as e:
-            raise SystemExit("Fboss Error: " + e)
+            raise SystemExit(f"Fboss Error: {e}")
 
     def show_stats(self, details, ports):
         with self._create_agent_client() as client:
-            if not ports:
-                stats = client.getAllPortStats()
-            else:
-                stats = {}
-                for port in ports:
-                    stats[port] = client.getPortStats(port)
+            stats = (
+                {port: client.getPortStats(port) for port in ports}
+                if ports
+                else client.getAllPortStats()
+            )
+
             neighbors = client.getLldpNeighbors()
         n2ports = {}
         # collect up the neighbors by port
@@ -416,14 +408,14 @@ class PortStatsCmd(cmds.FbossCmd):
         ret = ""
         if details and port_id in n2ports:
             for n in n2ports[port_id]:
-                ret += " {}".format(n.systemName)
+                ret += f" {n.systemName}"
         return ret
 
 
 class PortStatsClearCmd(cmds.FbossCmd):
     def run(self, ports):
         with self._create_agent_client() as client:
-            client.clearPortStats(ports if ports else client.getAllPortInfo().keys())
+            client.clearPortStats(ports or client.getAllPortInfo().keys())
 
 
 class PortStatusCmd(cmds.FbossCmd):
@@ -525,20 +517,8 @@ class PortStatusCmd(cmds.FbossCmd):
                         attrs["profileID"],
                     )
                 )
-            elif all:
-                name = port_info.name if port_info.name else port_id
-                print(
-                    field_fmt.format(
-                        name,
-                        attrs["admin_status"],
-                        attrs["color_align"],
-                        attrs["link_status"],
-                        attrs["present"],
-                        attrs["speed"],
-                    )
-                )
-            elif status.enabled:
-                name = port_info.name if port_info.name else port_id
+            elif all or status.enabled:
+                name = port_info.name or port_id
                 print(
                     field_fmt.format(
                         name,
@@ -552,7 +532,7 @@ class PortStatusCmd(cmds.FbossCmd):
         if missing_port_status:
             print(
                 utils.make_error_string(
-                    "Could not get status of ports {}".format(missing_port_status)
+                    f"Could not get status of ports {missing_port_status}"
                 )
             )
 
@@ -607,10 +587,7 @@ class PortStatusDetailCmd(object):
             self._transceiver.append(tid)
 
     def _mw_to_dbm(self, mw):
-        if mw == 0:
-            return -45.0
-        else:
-            return 10 * log10(mw)
+        return -45.0 if mw == 0 else 10 * log10(mw)
 
     def _get_dummy_status(self):
         """Get dummy status for ports without data"""
@@ -656,11 +633,9 @@ class PortStatusDetailCmd(object):
         """print setting details"""
 
         print(
-            "CDR Tx: {}\tCDR Rx: {}".format(
-                transceiver_ttypes.FeatureState._VALUES_TO_NAMES[info.settings.cdrTx],
-                transceiver_ttypes.FeatureState._VALUES_TO_NAMES[info.settings.cdrRx],
-            )
+            f"CDR Tx: {transceiver_ttypes.FeatureState._VALUES_TO_NAMES[info.settings.cdrTx]}\tCDR Rx: {transceiver_ttypes.FeatureState._VALUES_TO_NAMES[info.settings.cdrRx]}"
         )
+
         print(
             "Rate select: {}".format(
                 transceiver_ttypes.RateSelectState._VALUES_TO_NAMES[
@@ -707,12 +682,7 @@ class PortStatusDetailCmd(object):
             Cable(length=info.cable.singleModeKm, type="singleModeKm", unit="km"),
         )
 
-        cables_found = []
-        for cable in cable_info_obtained:
-            if cable.length:
-                cables_found.append(cable)
-
-        return cables_found
+        return [cable for cable in cable_info_obtained if cable.length]
 
     def _print_cable_details(self, info):
         """prints cable details"""
@@ -935,7 +905,7 @@ class PortStatusDetailCmd(object):
             )
         )
 
-    def _print_transceiver_details(self, tid):  # noqa
+    def _print_transceiver_details(self, tid):    # noqa
         """Print details about transceiver"""
 
         info = self._info_resp.get(tid)
@@ -976,13 +946,16 @@ class PortStatusDetailCmd(object):
         if self._verbose and info.thresholds:
             self._print_thresholds(info.thresholds)
 
-        if self._verbose and info.sensor:
-            if info.sensor.temp.flags and info.sensor.vcc.flags:
-                self._print_sensor_flags(info.sensor)
+        if (
+            self._verbose
+            and info.sensor
+            and info.sensor.temp.flags
+            and info.sensor.vcc.flags
+        ):
+            self._print_sensor_flags(info.sensor)
 
         for channel in info.channels:
-            port = ch_to_port.get(channel.channel, None)
-            if port:
+            if port := ch_to_port.get(channel.channel, None):
                 attrs = utils.get_status_strs(self._status_resp[port], None)
                 print(
                     "  Channel: {}  Port: {:>2}  Status: {:<8}  Link: {:<4}".format(
@@ -999,7 +972,7 @@ class PortStatusDetailCmd(object):
                 # is a bit less ambiguous about what we should do here when we
                 # were only asked to display info for some ports in a given
                 # transceiver.)
-                print("  Channel: {}".format(channel.channel))
+                print(f"  Channel: {channel.channel}")
 
             self._print_port_channel(channel)
 
@@ -1065,9 +1038,9 @@ class PortDescriptionCmd(cmds.FbossCmd):
                 resp = client.getAllPortInfo()
 
         except FbossBaseError as e:
-            raise SystemExit("Fboss Error: " + str(e))
+            raise SystemExit(f"Fboss Error: {str(e)}")
         except Exception as e:
-            raise Exception("Error: " + str(e))
+            raise Exception(f"Error: {str(e)}")
 
         def use_port(port):
             return (show_down or port.operState == 1) and (

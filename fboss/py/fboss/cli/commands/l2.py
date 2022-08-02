@@ -32,20 +32,21 @@ class L2TableCmd(cmds.FbossCmd):
                 relevant = [
                     agg_port for agg_port in agg_ports if agg_port.key == entry.trunk
                 ]
-                if relevant and len(relevant) == 1:
-                    port_data = relevant[0].name
-                else:
-                    port_data = f"{entry.trunk} (Trunk)"
-            else:
-                port_info = port_map.get(entry.port, None)
-                if not port_info:
-                    # Skip ports for which we could not lookup port_info
-                    # This is typically the entries associated with CPU
-                    # port, all of which just point to the MAC address
-                    # we assigned to they configured vlans.
-                    continue
-                port_data = port_info.name if port_info.name else entry.port
+                port_data = (
+                    relevant[0].name
+                    if relevant and len(relevant) == 1
+                    else f"{entry.trunk} (Trunk)"
+                )
 
+            elif port_info := port_map.get(entry.port, None):
+                port_data = port_info.name or entry.port
+
+            else:
+                # Skip ports for which we could not lookup port_info
+                # This is typically the entries associated with CPU
+                # port, all of which just point to the MAC address
+                # we assigned to they configured vlans.
+                continue
             if (hasattr(entry, "l2EntryType")) and entry.l2EntryType is not None:
                 if entry.l2EntryType == L2EntryType.L2_ENTRY_TYPE_PENDING:
                     entry_type = "Pending"

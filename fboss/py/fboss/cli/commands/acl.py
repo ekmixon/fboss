@@ -18,9 +18,7 @@ class AclTableCmd(cmds.FbossCmd):
     def getProtoString(self, proto):
         if proto == socket.IPPROTO_TCP:
             return "tcp"
-        if proto == socket.IPPROTO_UDP:
-            return "udp"
-        return str(proto)
+        return "udp" if proto == socket.IPPROTO_UDP else str(proto)
 
     def run(self):
         with self._create_agent_client() as client:
@@ -31,7 +29,7 @@ class AclTableCmd(cmds.FbossCmd):
             return
         resp = sorted(resp, key=lambda x: (x.priority))
         for entry in resp:
-            print("Acl: %s" % entry.name)
+            print(f"Acl: {entry.name}")
             print("   priority: %d" % entry.priority)
             if entry.srcIp.addr:
                 print(
@@ -74,7 +72,7 @@ class AclTableCmd(cmds.FbossCmd):
                     % (entry.l4DstPort, socket.getservbyport(entry.l4DstPort))
                 )
             if entry.dstMac:
-                print("   dst mac: %s" % entry.dstMac)
-            print("   action: %s" % entry.actionType)
+                print(f"   dst mac: {entry.dstMac}")
+            print(f"   action: {entry.actionType}")
 
             print()

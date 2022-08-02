@@ -48,14 +48,14 @@ class NicCmd(cmds.PrintNeighborTableCmd):
 
         if detail or verbose:
             for mac_address, vendor_name in mac_nic_dictionary.items():
-                print("MAC Address: " + mac_address + " Vendor: " + vendor_name)
+                print(f"MAC Address: {mac_address} Vendor: {vendor_name}")
             return
 
         # Non verbose output needs only NIC vendor names.
         nic_vendor_set = set(mac_nic_dictionary.values())
 
         response = ""
-        if len(nic_vendor_set) == 0:
+        if not nic_vendor_set:
             response = self._NO_MAC_FOUND_MESSAGE
         elif len(nic_vendor_set) > 1:
             response += ", ".join(

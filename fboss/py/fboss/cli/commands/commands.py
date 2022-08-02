@@ -65,7 +65,7 @@ class NeighborFlushSubnetCmd(FbossCmd):
         vlan_id = vlan
         with self._create_agent_client() as client:
             num_entries = client.flushNeighborEntry(bin_ip, vlan_id)
-        print("Flushed {} entries".format(num_entries))
+        print(f"Flushed {num_entries} entries")
 
     def run(self, flushType, network, vlan):
         if (
@@ -83,15 +83,15 @@ class NeighborFlushSubnetCmd(FbossCmd):
                 print("Invaid flushType")
                 exit(1)
 
-            num_entries = 0
-            for entry in table:
-                if (
-                    ipaddress.ip_address(utils.ip_ntop(entry.ip.addr))
-                    in ipaddress.ip_network(network)
-                ) and (vlan == 0 or vlan == entry.vlanID):
-                    num_entries += client.flushNeighborEntry(entry.ip, entry.vlanID)
+            num_entries = sum(
+                client.flushNeighborEntry(entry.ip, entry.vlanID)
+                for entry in table
+                if ipaddress.ip_address(utils.ip_ntop(entry.ip.addr))
+                in ipaddress.ip_network(network)
+                and vlan in [0, entry.vlanID]
+            )
 
-        print("Flushed {} entries".format(num_entries))
+        print(f"Flushed {num_entries} entries")
 
 
 class PrintNeighborTableCmd(FbossCmd):
@@ -118,9 +118,9 @@ class PrintNeighborTableCmd(FbossCmd):
             if entry.port in ports and ports[entry.port].name:
                 port_identifier = ports[entry.port].name
             ip = utils.ip_ntop(entry.ip.addr)
-            vlan_field = "{} ({})".format(entry.vlanName, entry.vlanID)
-            ttl = "{}s".format(entry.ttl // 1000) if entry.ttl else "?"
-            state = entry.state if entry.state else "NA"
+            vlan_field = f"{entry.vlanName} ({entry.vlanID})"
+            ttl = f"{entry.ttl // 1000}s" if entry.ttl else "?"
+            state = entry.state or "NA"
             classID = entry.classID
             print(
                 tmpl.format(

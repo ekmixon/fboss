@@ -43,18 +43,20 @@ class FbosslinkTestCase(LinkTestCase):
 
     @memoize_forever
     def _get_lab_config(self):
-        config_path = self._LAB_CONFIG_DIR + "/" + self.platform
-        content = ConfigeratorClient().get_config_contents_as_JSON(config_path)
-        return content
+        config_path = f"{self._LAB_CONFIG_DIR}/{self.platform}"
+        return ConfigeratorClient().get_config_contents_as_JSON(config_path)
 
     @memoize_forever
     def _get_expected_up_ports(self) -> List[str]:
         labConfigContent = self._get_lab_config()
         expectedUpPorts = []
         for pim in labConfigContent["pimInfo"]:
-            for port, portInfo in pim["interfaces"].items():
-                if portInfo.get("neighbor", "") != "":
-                    expectedUpPorts.append(port.lower())
+            expectedUpPorts.extend(
+                port.lower()
+                for port, portInfo in pim["interfaces"].items()
+                if portInfo.get("neighbor", "") != ""
+            )
+
         return expectedUpPorts
 
     @retryable(num_tries=50, sleep_time=5, debug=False)
@@ -70,9 +72,10 @@ class FbosslinkTestCase(LinkTestCase):
             down_ports = [
                 port
                 for port in port_info
-                if not port_info[port].operState == PortOperState.UP
+                if port_info[port].operState != PortOperState.UP
                 and port_info[port].name in expected_up_ports
             ]
+
             self.assertFalse(
                 down_ports,
                 msg=f" Not all ports are up " f" Ports that are down:{down_ports}",
@@ -205,13 +208,9 @@ class FbosslinkTestCase(LinkTestCase):
             self.logger.warning(f"Empty build info for {self.hostname}. Please check!")
             return
 
-        build_package_info = (
-            build_info_res["build_package_info"]
-            if "build_package_info" in build_info_res
-            else "-"
-        )
+        build_package_info = build_info_res.get("build_package_info", "-")
 
-        formatted_build_info = {
+        return {
             "Package Name": build_info_res["build_package_name"],
             "Package Info": build_package_info,
             "Package Version": build_info_res["build_package_version"],
@@ -224,7 +223,6 @@ class FbosslinkTestCase(LinkTestCase):
                 "Revision": build_info_res["build_revision"],
             },
         }
-        return formatted_build_info
 
     def _get_all_port_info(self) -> Dict[int, PortInfoThrift]:
         client = self._get_fboss_agent_client(self.hostname)
@@ -258,9 +256,7 @@ class FbosslinkTestCase(LinkTestCase):
 
     def _getPortsLinkFlapCount(self, ports):
         client = self._get_fboss_agent_client(self.hostname)
-        counterNames = []
-        for port in ports:
-            counterNames.append(port + "." + self._LINK_FLAP_COUNT_KEY)
+        counterNames = [f"{port}.{self._LINK_FLAP_COUNT_KEY}" for port in ports]
         return client.getSelectedCounters(counterNames)
 
     def _check_port_flap_counts(self, oldCounts, newCounts, expectFlaps):

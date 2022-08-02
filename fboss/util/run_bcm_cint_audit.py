@@ -124,7 +124,7 @@ def get_used_apis():
     command = "("
     # search all the files
     for search_pattern in PATTERNS_TO_SEARCH:
-        command = command + f"grep -r {search_pattern} {ROOT_DIR_TO_SEARCH};"
+        command = f"{command}grep -r {search_pattern} {ROOT_DIR_TO_SEARCH};"
     command += ")"
 
     # omit certain patterns
@@ -150,7 +150,7 @@ def get_wrapped_apis():
     command = "("
     # search in wrapped_symbols.bzl
     for search_pattern in WRAPPED_SYMBOLS_TO_SEARCH:
-        command = command + f"grep {search_pattern} {WRAPPED_SYMBOLS};"
+        command = f"{command}grep {search_pattern} {WRAPPED_SYMBOLS};"
     command += ")"
 
     # strip the line
